@@ -1,0 +1,83 @@
+---
+title: "Practical Machine Learning Peer Assignment Writeup"
+author: "ksun"
+date: "26. September 2015"
+output: html_document
+---
+
+The assignment requires building prediction model with HAR dataset. The model will leverage body movement data to predict which type of movement that a volunteer conducts. The overall process includes data analysis and pre-processing, building model, model validation, and model testing.
+
+
+#### 1. Data analysis and pre-processing
+I load the data and notice plenty of data points that contain too many "NA"s.
+```{r, cache=TRUE}
+dfExam <- read.csv("./data/pml-testing.csv", na.strings=c("", "NA", "NULL", "#DIV/0!"))
+dfSample <- read.csv("./data/pml-training.csv", na.strings=c("", "NA", "NULL", "#DIV/0!"))
+dim(dfSample[ , colSums(is.na(dfSample)) > 19000])
+```
+
+Therefore I remove the "NA" data points. I also removed a few data points definitely irrelevant to body movement.
+
+```{r}
+# remove data points with too many NAs
+dfSamplePro <- dfSample[ , colSums(is.na(dfSample)) < 200]
+
+# remove irrelevant data points
+dfSamplePro$X <- NULL
+dfSamplePro$user_name <- NULL
+dfSamplePro$raw_timestamp_part_1 <- NULL
+dfSamplePro$raw_timestamp_part_2 <- NULL
+dfSamplePro$cvtd_timestamp <- NULL
+```
+Intuitively the collective information of all body movement data points should determine the type of movement. It's natural to think of tree models as the best approach. Because tree models usually don't need data transformation to achieve good result, I decide to build and evaluate tree models first. I would revisit data pre-processing if the models don't perform well on current dataset.
+
+#### 2. Buidling model
+I slice data into training, validation, and testing sets.
+```{r, cache=TRUE, eval=FALSE}
+library(caret)
+```
+```{r, cache=TRUE}
+# slice data into train, validation, and test
+vInTrainValid <- createDataPartition(y = dfSamplePro$classe, p = 0.7, list = FALSE)
+dfTrainValid <- dfSamplePro[vInTrainValid,]
+dfTesting <- dfSamplePro[-vInTrainValid,]
+
+vInTrain <- createDataPartition(y = dfTrainValid$classe, p = 0.8, list = FALSE)
+dfTrain <- dfTrainValid[vInTrain,]
+dfValid <- dfTrainValid[-vInTrain,]
+```
+I try the default Rpart model first.
+```{r, cache=TRUE}
+# try Rpart model
+modRpart <- train(classe ~ ., method = 'rpart', data = dfTrain)
+valRpart <- predict(modRpart, dfValid)
+table(valRpart, dfValid$classe)
+```
+The result isn't good. There are plenty of prediction error in class B, D, and E. I increased the "maxcompete" and "maxsurrogate" parameters. Then I training the Rpart model again.
+```{r, cache=TRUE}
+modRpart2 <- rpart(classe ~ ., data = dfTrain, 
+                   control = rpart.control(maxcompete = 40, maxsurrogate = 50, maxdepth = 30))
+valRpart2 <- predict(modRpart2, dfValid, type = 'class')
+table(valRpart2, dfValid$classe)
+```
+Unfortunately the second Rpart model improves but still performs poorly. I turn to **Random Forests** model for better result, hopefully.
+```{r, cache=TRUE}
+library(randomForest)
+set.seed(222)
+modRf <- randomForest(classe ~ ., data = dfTrain, ntree = 100, importance = TRUE)
+valRf <- predict(modRf, dfValid, type = 'class')
+table(valRf, dfValid$classe)
+```
+The result is astonishing! I apply the model to tesing set.
+```{r, cache=TRUE}
+preRf <- predict(modRf, dfTesting, type = 'class')
+table(preRf, dfTesting$classe)
+```
+The result is very good too. Therefore I decide to use the same model to predict the 20 pml-testing cases. My predictions are:
+```{r, cache=TRUE}
+levels(dfExam$new_window) <- levels(dfTesting$new_window)
+examRf <- predict(modRf, dfExam, type = 'class')
+examRf
+```
+
+--END--
