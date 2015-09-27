@@ -114,7 +114,7 @@ table(valRpart, dfValid$classe)</code></pre>
 ##        C  76 203 388 264 124
 ##        D   0   0   0   0   0
 ##        E   1   0   0  16 317</code></pre>
-<p>The result isn’t good. There are plenty of prediction error in class B, D, and E. I increased the “maxcompete” and “maxsurrogate” parameters. Then I training the Rpart model again.</p>
+<p>The result isn’t good. There are plenty of prediction error in class B, D, and E. I increase the “maxcompete” and “maxsurrogate” parameters. Then I training the Rpart model again.</p>
 <pre class="r"><code>modRpart2 &lt;- rpart(classe ~ ., data = dfTrain, 
                    control = rpart.control(maxcompete = 40, maxsurrogate = 50, maxdepth = 30))
 valRpart2 &lt;- predict(modRpart2, dfValid, type = 'class')
@@ -141,7 +141,33 @@ table(valRf, dfValid$classe)</code></pre>
 ##     C   0   1 477   4   0
 ##     D   0   0   0 445   0
 ##     E   0   0   0   1 505</code></pre>
-<p>The result is astonishing! I apply the model to tesing set.</p>
+<p>The result is astonishing!</p>
+</div>
+<div id="cross-validation-and-out-of-samplebag-error-estimate" class="section level4">
+<h4>3. Cross validation and out-of-sample/bag error estimate</h4>
+<p>In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run, as follows:</p>
+<p>Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree.</p>
+<p>Therefore the out-of-sample error eastimate of the <strong>Random Forests</strong> model is 0.53%. Such error rate is very comfortable.</p>
+<pre class="r"><code>modRf</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = dfTrain, ntree = 100,      importance = TRUE) 
+##                Type of random forest: classification
+##                      Number of trees: 100
+## No. of variables tried at each split: 7
+## 
+##         OOB estimate of  error rate: 0.53%
+## Confusion matrix:
+##      A    B    C    D    E class.error
+## A 3123    2    0    0    0 0.000640000
+## B    8 2113    6    0    0 0.006582040
+## C    0   16 1900    1    0 0.008868023
+## D    1    0   18 1783    0 0.010543840
+## E    0    0    0    6 2014 0.002970297</code></pre>
+</div>
+<div id="test-the-model-and-predict" class="section level4">
+<h4>4. Test the model and predict</h4>
+<p>I apply the model to tesing set.</p>
 <pre class="r"><code>preRf &lt;- predict(modRf, dfTesting, type = 'class')
 table(preRf, dfTesting$classe)</code></pre>
 <pre><code>##      
@@ -151,7 +177,7 @@ table(preRf, dfTesting$classe)</code></pre>
 ##     C    0    0 1023    9    0
 ##     D    0    0    0  953    5
 ##     E    0    0    0    2 1077</code></pre>
-<p>The result is very good too. Therefore I decide to use the same model to predict the 20 pml-testing cases. My predictions are:</p>
+<p>The result is very good too. Given the out-of-sample error esitmate and test resulte, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:</p>
 <pre class="r"><code>levels(dfExam$new_window) &lt;- levels(dfTesting$new_window)
 examRf &lt;- predict(modRf, dfExam, type = 'class')
 examRf</code></pre>
