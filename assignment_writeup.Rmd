@@ -53,7 +53,7 @@ modRpart <- train(classe ~ ., method = 'rpart', data = dfTrain)
 valRpart <- predict(modRpart, dfValid)
 table(valRpart, dfValid$classe)
 ```
-The result isn't good. There are plenty of prediction error in class B, D, and E. I increased the "maxcompete" and "maxsurrogate" parameters. Then I training the Rpart model again.
+The result isn't good. There are plenty of prediction error in class B, D, and E. I increase the "maxcompete" and "maxsurrogate" parameters. Then I training the Rpart model again.
 ```{r, cache=TRUE}
 modRpart2 <- rpart(classe ~ ., data = dfTrain, 
                    control = rpart.control(maxcompete = 40, maxsurrogate = 50, maxdepth = 30))
@@ -68,12 +68,24 @@ modRf <- randomForest(classe ~ ., data = dfTrain, ntree = 100, importance = TRUE
 valRf <- predict(modRf, dfValid, type = 'class')
 table(valRf, dfValid$classe)
 ```
-The result is astonishing! I apply the model to tesing set.
+The result is astonishing! 
+
+#### 3. Cross validation and out-of-sample/bag error estimate
+In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run, as follows:
+
+Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree.
+
+Therefore the out-of-sample error eastimate of the **Random Forests** model is 0.53%. Such error rate is very comfortable.
+```{r, cache=TRUE}
+modRf
+```
+#### 4. Test the model and predict
+I apply the model to tesing set.
 ```{r, cache=TRUE}
 preRf <- predict(modRf, dfTesting, type = 'class')
 table(preRf, dfTesting$classe)
 ```
-The result is very good too. Therefore I decide to use the same model to predict the 20 pml-testing cases. My predictions are:
+The result is very good too. Given the out-of-sample error esitmate and test resulte, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:
 ```{r, cache=TRUE}
 levels(dfExam$new_window) <- levels(dfTesting$new_window)
 examRf <- predict(modRf, dfExam, type = 'class')
