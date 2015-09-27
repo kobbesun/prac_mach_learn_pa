@@ -75,17 +75,17 @@ In random forests, there is no need for cross-validation or a separate test set 
 
 Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree.
 
-Therefore the out-of-sample error eastimate of the **Random Forests** model is 0.53%. Such error rate is very comfortable.
+Therefore the out-of-sample error estimate of the **Random Forests** model is 0.53%. Such error rate is very comfortable.
 ```{r, cache=TRUE}
 modRf
 ```
-#### 4. Test the model and predict
-I apply the model to tesing set.
+#### 4. Testing and prediction
+I apply the model to testing set.
 ```{r, cache=TRUE}
 preRf <- predict(modRf, dfTesting, type = 'class')
 table(preRf, dfTesting$classe)
 ```
-The result is very good too. Given the out-of-sample error esitmate and test resulte, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:
+The result is very good too. Given the out-of-sample error estimate and test result, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:
 ```{r, cache=TRUE}
 levels(dfExam$new_window) <- levels(dfTesting$new_window)
 examRf <- predict(modRf, dfExam, type = 'class')
