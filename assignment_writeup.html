@@ -147,7 +147,7 @@ table(valRf, dfValid$classe)</code></pre>
 <h4>3. Cross validation and out-of-sample/bag error estimate</h4>
 <p>In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run, as follows:</p>
 <p>Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree.</p>
-<p>Therefore the out-of-sample error eastimate of the <strong>Random Forests</strong> model is 0.53%. Such error rate is very comfortable.</p>
+<p>Therefore the out-of-sample error estimate of the <strong>Random Forests</strong> model is 0.53%. Such error rate is very comfortable.</p>
 <pre class="r"><code>modRf</code></pre>
 <pre><code>## 
 ## Call:
@@ -165,9 +165,9 @@ table(valRf, dfValid$classe)</code></pre>
 ## D    1    0   18 1783    0 0.010543840
 ## E    0    0    0    6 2014 0.002970297</code></pre>
 </div>
-<div id="test-the-model-and-predict" class="section level4">
-<h4>4. Test the model and predict</h4>
-<p>I apply the model to tesing set.</p>
+<div id="testing-and-prediction" class="section level4">
+<h4>4. Testing and prediction</h4>
+<p>I apply the model to testing set.</p>
 <pre class="r"><code>preRf &lt;- predict(modRf, dfTesting, type = 'class')
 table(preRf, dfTesting$classe)</code></pre>
 <pre><code>##      
@@ -177,7 +177,7 @@ table(preRf, dfTesting$classe)</code></pre>
 ##     C    0    0 1023    9    0
 ##     D    0    0    0  953    5
 ##     E    0    0    0    2 1077</code></pre>
-<p>The result is very good too. Given the out-of-sample error esitmate and test resulte, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:</p>
+<p>The result is very good too. Given the out-of-sample error estimate and test result, I decide to use the same model to predict the 20 pml-testing cases. My predictions are:</p>
 <pre class="r"><code>levels(dfExam$new_window) &lt;- levels(dfTesting$new_window)
 examRf &lt;- predict(modRf, dfExam, type = 'class')
 examRf</code></pre>
